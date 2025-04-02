@@ -1,13 +1,14 @@
 import xml.etree.ElementTree as ET
 import os
 import csv
+from operator import itemgetter
 
 def getActions(box):
     actions = []
     for attribute in box.iter('attribute'):
         if(attribute.text == 'true'):
             actionName = attribute.get('name')
-            if(actionName != 'Stationary' and actionName != 'State: Stationary'): #          
+            if(actionName != 'Stationary' and actionName != 'State: Stationary'and actionName != 'State: In motion'): #          
                 actions.append(actionName)
     return actions
 
@@ -31,27 +32,29 @@ video_fps = 24
 keyframe_sampling_seconds = 1 #every 1 dsecond, get action
 keyframe_sampling_frames = keyframe_sampling_seconds * video_fps
 
-with open("output_AVA.csv", 'w', newline='', encoding = 'utf-8') as csvfile:
+
+all_data_rows =[]
+for track in myRoot.iter('track'):
+    #print('trackid', track.get('id'))
+    VIDEO_ID = int(track.get('task_id'))
+    PERSON_ID = int(track.get('id'))
+    for i, box in enumerate(track.iter('box')):
+        if (box.get('outside')=='1') or (box.get('occluded')=='1'):
+            continue
+        if i % keyframe_sampling_frames == 0:
+            KEYFRAME = i / video_fps
+            X1 = float(box.get('xtl')) / width
+            Y1 = float(box.get('ytl')) / height
+            X2 = float(box.get('xbr')) / width
+            Y2 = float(box.get('ybr')) / height
+
+            actions = getActions(box)
+
+            for ACTION_ID in actions:
+                row_data = [VIDEO_ID, KEYFRAME, X1, Y1, X2, Y2, ACTION_ID, PERSON_ID]
+                all_data_rows.append(row_data)
+
+all_data_rows.sort(key=itemgetter(0,1)) # sort keyframes on ascending order, per video
+with open('output_AVA.csv', 'w', newline='', encoding= 'utf-8') as csvfile:
     csvwriter = csv.writer(csvfile)
-
-    for track in myRoot.iter('track'):
-        #print('trackid', track.get('id'))
-        VIDEO_ID = track.get('task_id')
-        PERSON_ID = track.get('id')
-        for i, box in enumerate(track.iter('box')):
-            if (box.get('outside')=='1') or (box.get('occluded')=='1'):
-                continue
-            if i % keyframe_sampling_frames == 0:
-                KEYFRAME = i / video_fps
-                X1 = float(box.get('xtl')) / width
-                Y1 = float(box.get('ytl')) / height
-                X2 = float(box.get('xbr')) / width
-                Y2 = float(box.get('ybr')) / height
-
-                actions = getActions(box)
-
-                for ACTION_ID in actions:
-                    row_data = [VIDEO_ID, KEYFRAME, X1, Y1, X2, Y2, ACTION_ID, PERSON_ID]
-                    csvwriter.writerow(row_data)
-            
-            #amtFrames = box.get('frame') #TODO: separate total frames per video so videos get clipped every 3 frames, but counting from the start of their clip
+    csvwriter.writerows(all_data_rows)
