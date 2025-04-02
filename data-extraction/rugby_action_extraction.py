@@ -59,16 +59,16 @@ output_path = r'C:\\Users\\gzaz976\\Documents\\datasets\\ActionDataset\\Netball'
 #output_path = r'C:\\Users\\gzaz976\\Documents\\datasets\\ActionDataset\\Netball'
 
 ### frame extraction
-# if( os.path.exists(output_path)):
-#     shutil.rmtree(output_path)
+if( os.path.exists(output_path)):
+    shutil.rmtree(output_path)
 
-# for track in myroot.iter('track'): # video
-#     player_id = track.get('task_id') + '_' + track.get('id')
-#     print(player_id)
-#     for box in track.iter('box'): #each individual box of the video, per frame
-#         if (box.get('outside')=='1') or (box.get('occluded')=='1'):
-#             continue
-#         getBoxActions(box, player_id, output_path)
+for track in myroot.iter('track'): # video
+    player_id = track.get('task_id') + '_' + track.get('id')
+    print(player_id)
+    for box in track.iter('box'): #each individual box of the video, per frame
+        if (box.get('outside')=='1') or (box.get('occluded')=='1'):
+            continue
+        getBoxActions(box, player_id, output_path)
 
 ###count folders
 print("Total Actions:", countFoldersIn(output_path))
