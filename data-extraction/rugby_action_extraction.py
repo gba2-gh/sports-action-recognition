@@ -3,9 +3,10 @@ import os
 import cv2
 import shutil
 
-myTree = ET.parse('annotations.xml')
+
+myTree = ET.parse('C:\\Users\\gzaz976\\Documents\\datasets\\rugby\\annotations.xml')
+imageDataset = 'C:\\Users\\gzaz976\\Documents\\datasets\\rugby\\images\\default'
 myroot = myTree.getroot()
-imageDataset = 'C:\\Users\\gzaz976\\Documents\\datasets\\rugby_coco\\images\\default'
 
 
 #sets filename with correct id to save next frame in the correct sequence
@@ -29,7 +30,7 @@ def getBoxActions(box, player_id, base_path):
     for attribute in box.iter('attribute'):
         if(attribute.text == 'true'):
             actionName = attribute.get('name')
-            if(not(actionName.startswith('State'))): #
+            if(not(actionName.startswith('State')) and actionName != 'Stationary' and   actionName != 'Has ball' and actionName != 'In Motion' ): #
                 newpath = os.path.join(base_path, actionName, player_id) 
                 if not os.path.exists(newpath):
                     os.makedirs(newpath)
@@ -54,24 +55,22 @@ def countFoldersIn(directory):
     
        
 # MAIN
+output_path = r'C:\\Users\\gzaz976\\Documents\\datasets\\ActionDataset\\Netball'
+#output_path = r'C:\\Users\\gzaz976\\Documents\\datasets\\ActionDataset\\Netball'
 
+### frame extraction
+# if( os.path.exists(output_path)):
+#     shutil.rmtree(output_path)
 
+# for track in myroot.iter('track'): # video
+#     player_id = track.get('task_id') + '_' + track.get('id')
+#     print(player_id)
+#     for box in track.iter('box'): #each individual box of the video, per frame
+#         if (box.get('outside')=='1') or (box.get('occluded')=='1'):
+#             continue
+#         getBoxActions(box, player_id, output_path)
 
-
-output_path = r'Dataset\\Rugby' 
-
-if( os.path.exists(output_path)):
-    shutil.rmtree(output_path)
-
-for track in myroot.iter('track'): # video
-    player_id = track.get('task_id') + '_' + track.get('id')
-    print(player_id)
-    for box in track.iter('box'): #each individual box of the video, per frame
-        if (box.get('outside')=='1') or (box.get('occluded')=='1'):
-            continue
-        getBoxActions(box, player_id, output_path)
-
-
-print("Total Actions:", countFoldersIn('Dataset\\Rugby'))
+###count folders
+print("Total Actions:", countFoldersIn(output_path))
 
 
